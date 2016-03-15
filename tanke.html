@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title></title>
+	<link rel="stylesheet" href="">
+	<script type="text/javascript" src="main.js"></script>
+</head>
+<body>
+	<canvas id = "canvas" width="400px" height='400px' style="background: #ddd;">
+		
+	</canvas>
+</body>
+<!--
+	写此游戏只是为了，加深对js，canvas的理解和运用。有很多为完善的地方不喜勿喷。谢谢
+	bug:每打中一个障碍物消失之后，在刷新的时候。其中一个障碍物会有一个明显的刷新感 
+	有哪里不对我地方请联系我解决 谢谢 qq 791736879
+-->
+<script type="text/javascript">
+	var canvas = document.getElementById('canvas');
+	var body  = document.getElementsByTagName('body')[0];
+	var cxt = canvas.getContext('2d');
+	cxt.translate(200,200);
+	var tanke = new Tanke(-100,100,['green','#000']);
+	var arrZidan = [ ];  //保存子弹
+	var arrObstacle = [];//保存障碍物;
+	var arrObs = [];
+	for(var i=0;i<5;i++){
+		if(i !=0){
+			var arr=[-160,-40*i];
+			arrObs.push(arr);
+		}
+		var arr2=[120,-40*i];
+		arrObs.push(arr2)
+		var arr3=[-20,-40*i];
+		arrObs.push(arr3);
+		if(i != 4){
+			var arr4 = [10+28*i,-130]
+			arrObs.push(arr4)
+			var arr5= [10+28*i,80]
+			arrObs.push(arr5)
+			var arr6= [-60+(-28*i),80]
+			arrObs.push(arr6)
+			arrObs.push([-50-20*i,-50-30*i])
+			arrObs.push([50+40*i,170])
+		}
+		arrObs.push([-15-60*i,170])
+		
+	}
+	arrObs.push([-200,40])
+	arrObs.push([179,40])
+	arrObs.push([0,-200])
+	arrObs.forEach(function(item){ //实例化 障碍物
+		arrObstacle.push(new Obstacle(item))
+	});
+	//我方坦克运动，发子弹。 空格发子弹
+	body.onkeydown = function(e){
+		var code = e.keyCode || window.event.keyCode;
+		switch(code){
+			case 38:
+				tanke.moveUp();
+				break;
+			case 39:
+				tanke.moveRight();
+				break;
+			case  40:
+				tanke.moveDown();
+				break;
+			case  37:
+				tanke.moveLeft();
+				break;
+			case 32: //发送子弹
+				tanke.shooting()
+				break;
+		}
+		
+	}
+	var diTanke = [];
+	//实例化敌方坦克
+	diTanke.push(new Ditanke(-180,-170,["red","green"]))
+	diTanke.push(new Ditanke(100,0,["red","green"]))
+	diTanke.push(new Ditanke(150,150,["red","green"]))
+	//核心运算
+	var t = setInterval(function(){
+		cxt.clearRect(-200,-200,400,400);
+		for(var i  =0;i < diTanke.length;i++){
+			for(var j =0;j<arrObstacle.length;j++){//敌方坦克碰到障碍物事执行
+				switch (diTanke[i].direct){
+					case 1:
+						if((diTanke[i].y-15) < (arrObstacle[j].y +30) &&(diTanke[i].x+10) > arrObstacle[j].x && (diTanke[i].x-10)< (arrObstacle[j].x +20) && diTanke[i].y > arrObstacle[j].y){
+							diTanke[i].stop=true
+							break;
+						};
+						break;
+					case 2:
+						if(diTanke[i].x+15 >arrObstacle[j].x && (diTanke[i].y+10) > arrObstacle[j].y && (diTanke[i].y-10) < (arrObstacle[j].y+30) && diTanke[i].x < arrObstacle[j].x){
+							diTanke[i].stop=true;
+							break;
+						};
+						break;
+					case 3:
+						if( (diTanke[i].x+10) > arrObstacle[j].x && (diTanke[i].x-10)< (arrObstacle[j].x +20) && (diTanke[i].y+15)>arrObstacle[j].y && diTanke[i].y < arrObstacle[j].y){
+							diTanke[i].stop=true;
+							break;
+						}
+						break;
+					case 4:
+						if((diTanke[i].x-15) <= (arrObstacle[j].x + 20) && (diTanke[i].y+10) >arrObstacle[j].y && (diTanke[i].y-10) < (arrObstacle[j].y+30) && diTanke[i].x >arrObstacle[j].x){
+							diTanke[i].stop=true;
+							break;
+						};
+						break;
+				}
+			}
+		diTanke[i].start()	
+		}
+		arrObstacle.forEach(function(item){//绘制障碍物
+			item.drawObstacle()
+			switch (tanke.direct){
+				case 1:
+					if((tanke.y-15) < (item.y +30) &&(tanke.x+10) > item.x && (tanke.x-10)< (item.x +20) && tanke.y > item.y){
+						tanke.y = item.y+30+15
+					};
+					break;
+				case 2:
+					if(tanke.x+15 >item.x && (tanke.y+10) > item.y && (tanke.y-10) < (item.y+30) && tanke.x < item.x){
+						tanke.x = item.x -15;
+					};
+					break;
+				case 3:
+					if( (tanke.x+10) > item.x && (tanke.x-10)< (item.x +20) && (tanke.y+15)>item.y && tanke.y < item.y){
+						tanke.y = item.y -15;
+					}
+					break;
+				case 4:
+					if((tanke.x-15) <= (item.x + 20) && (tanke.y+10) >item.y && (tanke.y-10) < (item.y+30) && tanke.x >item.x){
+						tanke.x = item.x +20 +15;
+					}
+			}
+		});
+		tanke.drawTanke()
+		if(arrZidan.length >0){
+			arrZidan.forEach(function(item){//判断子弹
+				item.aniteZidan();
+				item.drawZidan();
+				var  length  = arrObstacle.length;
+				for(var i =0 ;i< length; i++){ //子弹打中障碍物事执行
+					if(item.x >arrObstacle[i].x && item.x < (arrObstacle[i].x + 20) && item.y > arrObstacle[i].y && item.y < (arrObstacle[i].y + 30)){
+						item.isDie = true;
+						arrObstacle[i].isDie = true;
+						break;
+					}
+				}
+				var len = diTanke.length;
+				for(var i=0 ;i< len; i++){//子弹打中敌方坦克是执行
+					if(item.type == diTanke[i].type){
+						continue;
+					}
+					if(diTanke[i].direct == 1 || diTanke[i].direct ==3){
+						if(item.x >(diTanke[i].x-10) && item.x < (diTanke[i].x + 10) && item.y > (diTanke[i].y-15) && item.y < (diTanke[i].y + 15)){
+							item.isDie = true;
+							diTanke[i].isDie = true;
+							break;
+						}
+					}else{
+						if(item.x >(diTanke[i].x-15) && item.x < (diTanke[i].x + 15) && item.y > (diTanke[i].y-10) && item.y < (diTanke[i].y + 10)){
+							item.isDie = true;
+							diTanke[i].isDie = true;
+							break;
+						}
+					}	
+				}
+				if(tanke.direct == 1 || tanke.direct == 3){
+					//子弹打中我方坦克时执行
+					if(item.x >(tanke.x-10) && item.x < (tanke.x + 10) && item.y > (tanke.y-15) && item.y < (tanke.y + 15)){
+							item.isDie = true;
+							clearInterval(t)
+							clearInterval(t1)
+							alert('敌方胜利')
+					}		
+				}else{
+					if(item.x >(tanke.x-15) && item.x < (tanke.x + 15) && item.y > (tanke.y-10) && item.y < (tanke.y + 10)){
+						item.isDie = true;
+						clearInterval(t)
+						clearInterval(t1)
+						alert('敌方胜利')
+					}
+				}
+
+			})
+		}
+		if(diTanke.length == 0){
+			clearInterval(t)
+			clearInterval(t1)
+			alert('我方胜利')
+		}
+	},30)
+	//敌方坦克发子弹
+	var t1 = setInterval(function(){
+		diTanke.forEach(function(item){
+			var ran = Math.random()*2000
+			setTimeout(function(){
+				item.shooting()
+			},ran)
+		})
+	},Math.random()*4000)
+</script>
+</html>
